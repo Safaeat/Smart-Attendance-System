@@ -1,0 +1,177 @@
+﻿@model List<Smart_Attendance_System.Models.ViewModel.MonthlySalaryViewModel>
+@{
+    ViewData["Title"] = "Monthly Salary Report";
+    Layout = "_AdminLayout";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-primary">
+            <i class="fas fa-money-bill-wave me-2"></i> Monthly Salary Report
+        </h2>
+        <small class="text-muted">Generated on @DateTime.Now.ToString("MMMM dd, yyyy 'at' HH:mm")</small>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0"><i class="fas fa-table me-2"></i> Employee Salary Details</h5>
+        </div>
+        <div class="card-body p-0">
+            @if (Model.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped align-middle mb-0" id="datatbl">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Employee Name</th>
+                                <th>Employee ID</th>
+                                <th>Gross Salary</th>
+                                <th>Working Days</th>
+                                <th>Current Month Salary</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td class="fw-bold">@item.EmployeeName</td>
+                                    <td><span class="badge bg-secondary">@item.EmployeeCode</span></td>
+                                    <td class="text-success fw-semibold">৳@item.GrossSalary.ToString("N2")</td>
+                                    <td>@(item.PresentCount + item.LateCount + item.ApprovedLeaveDays)</td>
+                                    <td class="fw-bold text-primary">৳@item.NetSalary.ToString("N2")</td>
+                                    <td>
+                                        <a asp-action="UpdateSalary" asp-route-id="@item.EmployeeId" class="btn btn-sm btn-warning me-1">
+                                            <i class="fas fa-edit"></i> Update
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-info view-salary-btn"
+                                                data-employeeid="@item.EmployeeId">
+                                            <i class="fas fa-eye"></i> View
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot class="table-light">
+                            <tr>
+                                <th colspan="4" class="text-end">Total Salary:</th>
+                                <th class="text-primary fw-bold">৳@Model.Sum(x => x.NetSalary).ToString("N2")</th>
+                                <th></th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-5">
+                    <i class="fas fa-exclamation-triangle fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No salary records found for this period.</h5>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Salary Details Modal -->
+    <div class="modal fade" id="salaryDetailsModal" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="modalLabel">Salary Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div id="modalBodyContainer">
+                    <div class="text-center py-3">
+                        <span class="spinner-border text-primary"></span>
+                        <p>Loading...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- html2pdf for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            $('#datatbl').DataTable();
+        });
+        const modal = new bootstrap.Modal(document.getElementById('salaryDetailsModal'));
+
+        document.addEventListener('click', async function (e) {
+            // --- View Salary Button ---
+            const viewBtn = e.target.closest('.view-salary-btn');
+            if (viewBtn) {
+                const empId = viewBtn.getAttribute('data-employeeid');
+                modal.show();
+
+                const container = document.getElementById('modalBodyContainer');
+                container.innerHTML = `<div class="text-center py-3">
+                                            <span class="spinner-border text-primary"></span>
+                                            <p>Loading...</p>
+                                       </div>`;
+                try {
+                    const baseUrl = '@Url.Action("ViewSalaryDetails", "Admin")';
+                    const response = await fetch(`${baseUrl}?id=${empId}`);
+                    if (!response.ok) throw new Error('Failed to fetch data.');
+                    container.innerHTML = await response.text();
+
+                    // Append Print and PDF buttons if not exist
+                    if(!document.getElementById('printSalaryBtn')) {
+                        const btnDiv = document.createElement('div');
+                        btnDiv.classList.add('text-center','mt-3');
+                        btnDiv.innerHTML = `
+                            <button id="printSalaryBtn" class="btn btn-info me-2">Print</button>
+                            <button id="downloadPdfBtn" class="btn btn-danger">Download PDF</button>
+                        `;
+                        container.appendChild(btnDiv);
+                    }
+
+                } catch (err) {
+                    container.innerHTML = `<div class="text-danger text-center">Error loading salary details.</div>`;
+                    console.error(err);
+                }
+                return;
+            }
+
+            // --- Print Button ---
+            const printBtn = e.target.closest('#printSalaryBtn');
+            if(printBtn){
+                const container = document.getElementById('modalBodyContainer');
+                const printWindow = window.open('', '', 'width=900,height=600');
+                printWindow.document.write(container.innerHTML);
+                printWindow.document.close();
+                printWindow.focus();
+                printWindow.print();
+                printWindow.close();
+                return;
+            }
+
+            // --- Download PDF Button ---
+            const pdfBtn = e.target.closest('#downloadPdfBtn');
+            if(pdfBtn){
+                const container = document.getElementById('modalBodyContainer');
+
+                // Clone content to avoid modifying original
+                const contentClone = container.cloneNode(true);
+
+                // Remove buttons from PDF
+                const btns = contentClone.querySelectorAll('button');
+                btns.forEach(b => b.remove());
+
+                // Generate PDF using html2pdf
+                html2pdf().set({
+                    margin: 0.5,
+                    filename: (contentClone.querySelector('h4')?.innerText || 'Salary').replace(/\s+/g,'_') + '_Salary.pdf',
+                    html2canvas: { scale: 2, useCORS: true },
+                    jsPDF: { unit: "in", format: "a4", orientation: "portrait" }
+                }).from(contentClone).save();
+
+                return;
+            }
+        });
+    </script>
+}

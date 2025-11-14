@@ -1,0 +1,48 @@
+﻿@model IEnumerable<Smart_Attendance_System.Models.ViewModel.EmployeeAppointmentVM>
+
+@{
+    ViewData["Title"] = "Employee Appointments";
+    Layout = "_AdminLayout";
+}
+
+<h2 class="mb-4">Employee Appointments</h2>
+
+<table class="table table-bordered table-hover">
+    <thead class="thead-dark">
+        <tr>
+            <th>Employee ID</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Department</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.EmployeeId</td>
+                <td>@item.EmployeeName</td>
+                <td>@item.Email</td>
+                <td>@item.DepartmentName</td>
+                <td>
+                    <!-- Approve -->
+                    <form asp-action="ApproveEmployee" method="post" style="display:inline;">
+                        <input type="hidden" name="id" value="@item.EmployeeRecordId" />
+                        <button type="submit" class="btn btn-sm btn-success">
+                            <i class="fas fa-check"></i> Approve
+                        </button>
+                    </form>
+
+                    <!-- Reject -->
+                    <form asp-action="RejectEmployee" method="post" style="display:inline;">
+                        <input type="hidden" name="id" value="@item.EmployeeRecordId" />
+                        <button type="submit" class="btn btn-sm btn-danger">
+                            <i class="fas fa-times"></i> Reject
+                        </button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

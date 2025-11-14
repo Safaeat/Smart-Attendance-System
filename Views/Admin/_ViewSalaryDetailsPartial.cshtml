@@ -1,0 +1,47 @@
+﻿@model Smart_Attendance_System.Models.ViewModel.MonthlySalaryViewModel
+
+<div class="modal-body" id="modalContent">
+    <div class="text-center mb-4">
+        <img src="~/images/user-avatar.png" class="rounded-circle mb-2" alt="Employee Photo" width="80" height="80" />
+        <h4 class="text-primary fw-bold" id="employeeName">@Model.EmployeeName</h4>
+        <p class="text-muted" id="employeeCode">@Model.EmployeeCode</p>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="mb-0">Salary Info</h6>
+                </div>
+                <div class="card-body">
+                    <p><strong>Gross Salary:</strong> <span id="grossSalary">৳@Model.GrossSalary.ToString("N2")</span></p>
+                    <p><strong>Current Month Salary:</strong> <span id="monthlySalary">৳@Model.NetSalary.ToString("N2")</span></p>
+                    <p><strong>Working Days:</strong> <span id="workingDays">@(Model.PresentCount + Model.LateCount + Model.ApprovedLeaveDays)</span></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-success text-white">
+                    <h6 class="mb-0">Attendance Summary</h6>
+                </div>
+                <div class="card-body">
+                    <p><strong>Present Days:</strong> <span class="badge bg-success" id="presentCount">@Model.PresentCount</span></p>
+                    <p><strong>Late Days:</strong> <span class="badge bg-warning text-dark" id="lateCount">@Model.LateCount</span></p>
+                    <p><strong>Approved Leave:</strong> <span class="badge bg-info text-dark" id="approvedLeave">@Model.ApprovedLeaveDays</span></p>
+                    <p><strong>Absent:</strong> <span class="badge bg-danger" id="absentCount">@Model.AbsentCount</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* <div class="mt-4 text-center">
+        <button class="btn btn-danger me-2 print-pdf-btn" data-action="pdf">
+            <i class="fas fa-file-pdf"></i> Download PDF
+        </button>
+        <button class="btn btn-info print-pdf-btn" data-action="print">
+            <i class="fas fa-print"></i> Print
+        </button>
+    </div> *@
+</div>
